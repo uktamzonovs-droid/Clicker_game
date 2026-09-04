@@ -1,0 +1,279 @@
+import pygame
+import random
+import sys
+
+# Инициализация PyGame
+pygame.init()
+
+# Фоновая музыка
+pygame.mixer.music.load("north-endelos-main-version-41475-03-52.mp3")
+pygame.mixer.music.set_volume(0.3)
+pygame.mixer.music.play(-1)
+
+# Настройки экрана
+WIDTH = 800
+HEIGHT = 600
+
+# Цвета
+BLUE = (50, 153, 213)
+RED = (213, 50, 80)
+WHITE = (255, 255, 255)
+
+# Настройка окна
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Кликер")
+
+font = pygame.font.SysFont("bahnschrift", 30)
+
+# Переменные игры
+score = 0
+
+SQUARE_SIZE = 50
+
+# Первый зомби
+square_rect = pygame.Rect(0, 0, SQUARE_SIZE, SQUARE_SIZE)
+
+# Второй зомби
+second_square_rect = pygame.Rect(0, 0, SQUARE_SIZE, SQUARE_SIZE)
+
+# Пока второго зомби нет
+second_zombie = False
+
+# =========================
+# ЗАГРУЗКА ФОНА
+# =========================
+
+try:
+    bg_image = pygame.image.load(
+        "ChatGPT Image 14 авг. 2026 г., 19_33_49.png"
+    )
+    bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+
+except:
+    print("Файл фона не найден. Используется обычный фон.")
+
+    bg_image = pygame.Surface((WIDTH, HEIGHT))
+    bg_image.fill(BLUE)
+
+
+# =========================
+# ЗАГРУЗКА ИГРОКА
+# =========================
+
+try:
+    target_image = pygame.image.load(
+        "ChatGPT Image 19 авг. 2026 г., 20_33_43.png"
+    )
+
+    target_image = pygame.transform.scale(
+        target_image,
+        (SQUARE_SIZE, SQUARE_SIZE)
+    )
+
+except:
+    print("Файл игрока не найден. Используется красный квадрат.")
+
+    target_image = pygame.Surface(
+        (SQUARE_SIZE, SQUARE_SIZE)
+    )
+
+    target_image.fill(RED)
+
+
+FPS = 60
+clock = pygame.time.Clock()
+
+
+# =========================
+# ТАЙМЕР
+# =========================
+
+MOVE_SQUARE_EVENT = pygame.USEREVENT + 1
+
+MOVE_INTERVAL = 5000  # 5 секунды
+
+pygame.time.set_timer(
+    MOVE_SQUARE_EVENT,
+    MOVE_INTERVAL
+)
+
+
+# =========================
+# ФУНКЦИЯ ДВИЖЕНИЯ
+# =========================
+
+def move_square():
+
+    global square_rect
+    global second_square_rect
+
+    # Первый зомби
+    new_x = random.randint(
+        0,
+        WIDTH - SQUARE_SIZE
+    )
+
+    new_y = random.randint(
+        0,
+        HEIGHT - SQUARE_SIZE
+    )
+
+    square_rect.topleft = (
+        new_x,
+        new_y
+    )
+
+    # Второй зомби
+    if second_zombie:
+
+        new_x = random.randint(
+            0,
+            WIDTH - SQUARE_SIZE
+        )
+
+        new_y = random.randint(
+            0,
+            HEIGHT - SQUARE_SIZE
+        )
+
+        second_square_rect.topleft = (
+            new_x,
+            new_y
+        )
+
+
+# Первое положение
+move_square()
+
+
+# =========================
+# ГЛАВНЫЙ ЦИКЛ
+# =========================
+
+running = True
+
+while running:
+
+    # -------------------------
+    # ОБРАБОТКА СОБЫТИЙ
+    # -------------------------
+
+    for event in pygame.event.get():
+
+        # Закрытие окна
+        if event.type == pygame.QUIT:
+            running = False
+
+
+        # Перемещение зомби
+        if event.type == MOVE_SQUARE_EVENT:
+
+            move_square()
+
+
+        # Нажатие мыши
+        if event.type == pygame.MOUSEBUTTONDOWN:
+
+            if event.button == 1:
+
+                # Первый зомби
+                if square_rect.collidepoint(event.pos):
+
+                    score += 1
+
+                    move_square()
+
+
+                # Второй зомби
+                if second_zombie:
+
+                    if second_square_rect.collidepoint(event.pos):
+
+                        score += 1
+
+                        move_square()
+
+
+    # =========================
+    # ПОЯВЛЕНИЕ ВТОРОГО ЗОМБИ
+    # =========================
+
+    if score >= 30 and not second_zombie:
+
+        second_zombie = True
+
+        # Сразу даём ему случайное положение
+        new_x = random.randint(
+            0,
+            WIDTH - SQUARE_SIZE
+        )
+
+        new_y = random.randint(
+            0,
+            HEIGHT - SQUARE_SIZE
+        )
+
+        second_square_rect.topleft = (
+            new_x,
+            new_y
+        )
+
+
+    # =========================
+    # ФОН
+    # =========================
+
+    screen.blit(
+        bg_image,
+        (0, 0)
+    )
+
+
+    # =========================
+    # ПЕРВЫЙ ЗОМБИ
+    # =========================
+
+    screen.blit(
+        target_image,
+        square_rect.topleft
+    )
+
+
+    # =========================
+    # ВТОРОЙ ЗОМБИ
+    # =========================
+
+    if second_zombie:
+
+        screen.blit(
+            target_image,
+            second_square_rect.topleft
+        )
+
+
+    # =========================
+    # СЧЁТ
+    # =========================
+
+    score_text = font.render(
+        f"Счет: {score}",
+        True,
+        WHITE
+    )
+
+    screen.blit(
+        score_text,
+        (10, 10)
+    )
+
+
+    # Обновляем экран
+    pygame.display.update()
+
+    # 60 FPS
+    clock.tick(FPS)
+
+
+# Выход
+pygame.quit()
+sys.exit()
